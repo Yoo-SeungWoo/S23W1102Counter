@@ -17,6 +17,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -25,16 +26,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModelProvider
 import kr.ac.kumoh.ce.s20210734.s23w1102counter.ui.theme.S23W1102CounterTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        val vm = ViewModelProvider(this) [CounterViewModel::class.java]
+        //val vm2 = ViewModelProvider(this) [CounterViewModel::class.java]
         super.onCreate(savedInstanceState)
         setContent {
-            /*MyApp{
-                Greeting("안녕하세요")
-            }
-            */
             MyApp {
                 Column(
                     modifier = Modifier
@@ -43,8 +43,9 @@ class MainActivity : ComponentActivity() {
                     verticalArrangement = Arrangement.Center,
                 ) {
                     Clicker()
-                    Counter()
-                    Counter()
+                    Counter(vm)
+                    //Counter(vm2)
+                    //이래도 같이 증가한다. 왜냐 싱글톤 모델이다. view모델에서 따로 설정해야
                 }
             }
         }
@@ -64,28 +65,10 @@ fun MyApp(content:@Composable () -> Unit) {
     }
 }
 
-/*@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}*/
-
-//함수를 다시 호출 해야 바뀐다->이 과정을 Recomposition(재구성)이라고 한다->State 사용
 @Composable
 fun Clicker() {
-    //var txtString = "눌러주세요"
-    //var txtString by remember { mutableStateOf("눌러주세요") }
     val (txtString, setTxtString) = remember { mutableStateOf("눌러주세요") }
 
-    /*Column {
-        Text(txtString)
-        //Button(onClick = { txtString = "눌렸습니다" } ) {
-        Button(onClick = { setTxtString("눌렸습니다") } ) {
-            Text("눌러봐")
-        }
-    }*/
     Column(
         modifier = Modifier
             //.fillMaxSize()
@@ -103,16 +86,15 @@ fun Clicker() {
             onClick = {
                 setTxtString("눌렸습니다")
             }) {
-            // Text(text = "눌러봐")
             Text("눌러봐")
         }
     }
 }/**/
 
 @Composable
-fun Counter() {
-    //var count = 0;
-    val (count, setCount) = rememberSaveable{ mutableStateOf(0) }
+fun Counter(viewModel: CounterViewModel) {
+    //val (count, setCount) = rememberSaveable{ mutableStateOf(0) }
+    val count by viewModel.count.observeAsState(0)
 
     Column(
         modifier = Modifier
@@ -128,16 +110,17 @@ fun Counter() {
         Row {
             Button(modifier = Modifier.weight(1f),
                 onClick = {
-                    //count++
-                    setCount(count + 1)
+                    //setCount(count + 1)
+                    viewModel.onAdd()
                 }) {
                 Text("증가")
             }
             Spacer(modifier = Modifier.width(8.dp))
             Button(modifier = Modifier.weight(1f),
                 onClick = {
-                    if(count >0 )
-                        setCount(count - 1)
+                      //if(count >0 )
+                      //    setCount(count - 1)
+                    viewModel.onSub()
                 }) {
                 Text("감소")
             }
